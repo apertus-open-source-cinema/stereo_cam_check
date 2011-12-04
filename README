@@ -1,0 +1,121 @@
+
+                Stereo Camera Checker
+
+Written by Hugh Fisher, CECS ANU, 2011
+Distributed under MIT/X11 license: see file COPYING
+
+
+This is a small application for previewing and checking
+stereo video footage, in particular the live RTSP video
+streams from a pair of Elphel cameras. This app shows
+you the paired video streams, side by side or overlayed,
+while you fiddle with focus, separation, etc.
+
+
+System Requirements:
+
+Developed and tested on Linux, Ubuntu 10.04. Main app
+framework is written in wxPython and uses OpenGL for
+rendering so should be portable to other systems. But
+the video handling code is all GStreamer, so would need
+a lot of rewriting for MacOS or MS Windows.
+
+Requires OpenGL 2 with GPU shaders. This usually means
+the ATI or NVIDIA binary driver.
+
+python-dev
+python-wxgtk2.8
+python-opengl
+libgstreamer0.10
+libgstreamer0.10-dev
+libgstreamer-plugins-base0.10
+libgstreamer-plugins-base0.10-dev
+python-gst0.10
+
+gstreamer-tools: Strongly recommended but not essential
+
+
+Building:
+
+There's a custom GStreamer plugin written in C. Make
+sure you have the libgstreamer dev packages, then
+    cd StereoCamCheck
+    make
+
+
+Running:
+
+It probably helps to have as environment vars
+    export GST_PLUGIN_PATH=/where/you/put/StereoCamCheck
+    export LD_LIBRARY_PATH=/where/you/put/StereoCamCheck
+    export PYTHON_PATH=/where/you/put/StereoCamCheck
+
+After that it should just be
+    $ python main.py
+
+You should see a "Source Chooser" dialog box appear.
+
+The app expects two, one for each eye, but will work
+with just one if that's all you want. You can type
+names/URIs directly into the fields, or choose files.
+After the first run, recent entries will be stored
+and can be chosen from the drop down lists.
+
+Filenames with spaces in them WILL NOT WORK. This is
+something to do with how GStreamer parses pipelines and
+can't be fixed by me.
+
+There's also a field for entering a GStreamer pipeline.
+This is only necessary if the default pipelines builtin
+to the app don't work. (See the drop down list.) You
+should not put a sink on the end as the app adds those
+itself, but you can use gstgltexturesink with parameters.
+
+For a simple demo, just choose the demoLeft/Right .png
+files shipped with the app and leave the pipeline blank.
+
+Once running, you'll see the left and right eye images.
+The app menu lets you choose whether these should be side
+by side, overlaid on top of each other, or displayed as
+a red-blue stereo pair. In red-blue stereo the video is
+converted to greyscale, to ensure that all pixels are
+visible to both eyes.
+
+That's it!
+
+
+CHANGES
+
+1.3
+    Video is displayed at 1:1 size, or scaled to fixed
+    proportion of size, rather than dynamically resizing
+    all the time. Plus, overlay modes use as much of
+    the window as they can.
+    
+    Pipeline gets remembered as well as video sources
+    
+    Can specify gstgltexturesink with properties in the
+    pipeline field
+    
+    Added control key shortcuts for menu actions
+    
+    Added i18n code and rough French translation
+    
+1.2
+    New: added the Bayer demosaicing code from the McGuire
+    paper. Implementation sucks though, hard-coded into
+    the app instead of being embedded in GStreamer plugin.
+
+1.1
+    Fixed: silly mistake in calculating video aspect ratio.
+    
+    New: red-blue stereo display, will work with just one
+    source, handles mono video as well as RGB.
+    
+1.0
+    Somewhat useful and doesn't crash all that often.
+
+
+All suggestions, comments, bugs, etc welcome.
+Hugh.Fisher@anu.edu.au
+
