@@ -45,6 +45,12 @@ sure you have the libgstreamer dev packages, then
 
 Running:
 
+The automatic way is the execute a script that should take care of everything:
+./run.sh
+
+
+The manual way is to set up paths and then run python as follows:
+
 It probably helps to have as environment vars
     export GST_PLUGIN_PATH=/where/you/put/StereoCamCheck
     export LD_LIBRARY_PATH=/where/you/put/StereoCamCheck
@@ -52,6 +58,8 @@ It probably helps to have as environment vars
 
 After that it should just be
     $ python main.py
+
+
 
 You should see a "Source Chooser" dialog box appear.
 
