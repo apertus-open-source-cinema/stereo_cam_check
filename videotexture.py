@@ -109,6 +109,7 @@ class VideoTexture(object):
         self.sink = gst.element_factory_make("gltexturesink", self.newSinkName())
         self.sink.set_property("texture", self.texID)
         self.bayer = False
+        self.prog  = None
     
     def connectSource(self, source, pipeline):
         """Try and open video source, attach texture sink"""
@@ -147,7 +148,16 @@ class VideoTexture(object):
             self.tex = Vec2f(1.0, 1.0)
             self.bayer = self.sink.get_property("is_bayer")
             self.firstFrame = True
-        
+    
+    def configShader(self):
+        if self.bayer:
+            shader = gpu.getProgram()
+            h = gpu.getUniform(shader, "sourceSize")
+            glUniform4f(h, self.vid.w, self.vid.h, 1.0/self.vid.w, 1.0/self.vid.h)
+            h = gpu.getUniform(shader, "firstRed")
+            # This is the RGGB ordering that works with Elphel
+            glUniform2f(h, 1, 0)
+    
     def stop(self):
         self.stream.set_state(gst.STATE_NULL)
     
@@ -203,14 +213,10 @@ class VideoTexture(object):
             # Actual dimensions may cause change in layout
             self.resize(force=True)
             self.place(self.fx, self.fy, self.canvas, True)
-            if self.bayer:
-                shader = gpu.getProgram()
-                h = gpu.getUniform(shader, "sourceSize")
-                glUniform4f(h, self.vid.w, self.vid.h, 1.0/self.vid.w, 1.0/self.vid.h)
-                h = gpu.getUniform(shader, "firstRed")
-                # This is the RGGB ordering that works with Elphel
-                glUniform2f(h, 1, 0)
             self.firstFrame = False
+        if gpu.getProgram() != self.prog:
+            self.configShader()
+            self.prog = gpu.getProgram()
         #
         # Animated slide to new position?
         self.slide()

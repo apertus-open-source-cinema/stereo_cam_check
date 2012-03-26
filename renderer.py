@@ -35,7 +35,6 @@ from videotexture import *
 MYID_SPLIT      = wx.ID_HIGHEST + 1
 MYID_BLENDED    = MYID_SPLIT + 1
 MYID_ANAGLYPH   = MYID_BLENDED + 1
-
 MYID_FULLSCREEN = MYID_ANAGLYPH + 1
 
     
@@ -98,7 +97,7 @@ class StereoFrame(Canvas3D):
      
     def OnFullScreen(self, event):
         """Change to fullscreen mode"""
-        self.window.ShowFullScreen(True, style=wx.FULLSCREEN_ALL)
+        self.window.ShowFullScreen(not self.window.IsFullScreen(), style=wx.FULLSCREEN_ALL)
     
     def OnSplit(self, event):
         """Switch to split view, with animation"""

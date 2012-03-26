@@ -57,6 +57,7 @@ enum
     PROP_WIDTH,
     PROP_HEIGHT,
     PROP_IS_BAYER,
+    PROP_STATS,
 };
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE(
@@ -105,6 +106,7 @@ static void gst_gltexture_sink_base_init(gpointer gclass)
 {
     GstElementClass *element_class = GST_ELEMENT_CLASS(gclass);
 
+    printf("gst_gltexture_sink_base_init\n");
     gst_element_class_add_pad_template(element_class,
             gst_static_pad_template_get(&sink_factory));
             
@@ -121,6 +123,7 @@ static void gst_gltexture_sink_class_init(GstGLTextureSinkClass * klass)
     GstElementClass *   gstelement_class;
     GstBaseSinkClass *  gstbasesink_class;
 
+    printf("gst_gltexture_sink_class_init\n");
     gobject_class = (GObjectClass *)klass;
     gstelement_class = (GstElementClass *)klass;
     gstbasesink_class = (GstBaseSinkClass *)klass;
@@ -148,6 +151,8 @@ static void gst_gltexture_sink_class_init(GstGLTextureSinkClass * klass)
     gstbasesink_class->preroll   = GST_DEBUG_FUNCPTR(gst_gltexture_sink_preroll);
     gstbasesink_class->render    = GST_DEBUG_FUNCPTR(gst_gltexture_sink_render);
     gstbasesink_class->get_times = GST_DEBUG_FUNCPTR(gst_gltexture_sink_get_times);
+    
+    klass->instances = 0;
 }
 
 static void gst_gltexture_sink_init(GstGLTextureSink * self,
@@ -155,6 +160,7 @@ static void gst_gltexture_sink_init(GstGLTextureSink * self,
 {
     GstPad * pad;
     
+    printf("gst_gltexture_sink_init\n");
     pad = GST_BASE_SINK_PAD(self);
     gst_pad_set_setcaps_function(pad, gst_gltexture_sink_setcaps);
     
@@ -173,6 +179,13 @@ static void gst_gltexture_sink_init(GstGLTextureSink * self,
     
     self->currentFrame = NULL;
     self->callbackTag  = 0;
+    
+    self->stats  = 1;
+    self->frames = 0;
+    self->drops  = 0;
+    
+    gclass->instances += 1;
+    self->instance = gclass->instances;
 }
 
 static gboolean gltexturesink_init(GstPlugin * gltexturesink)
@@ -180,6 +193,7 @@ static gboolean gltexturesink_init(GstPlugin * gltexturesink)
     GST_DEBUG_CATEGORY_INIT(gst_gltexture_sink_debug, "gltexturesink",
                 0, GLTextureSinkDescription);
 
+    printf("gltexturesink_init\n");
     return gst_element_register(gltexturesink,
             "gltexturesink",
             GST_RANK_NONE,
@@ -224,7 +238,10 @@ static void gst_gltexture_sink_set_property(GObject * object, guint prop_id,
         case PROP_TEXTURE_FORMAT:
             self->texture_format = g_value_get_uint(value);
             break;
-      default:
+        case PROP_STATS:
+            self->stats = g_value_get_uint(value);
+            break;
+        default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
             break;
     }
@@ -251,6 +268,8 @@ static void gst_gltexture_sink_get_property(GObject * object, guint prop_id,
         case PROP_IS_BAYER:
             g_value_set_boolean(value, self->is_bayer);
             break;
+        case PROP_STATS:
+            g_value_set_uint(value, self->stats);
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
             break;
@@ -304,15 +323,23 @@ static void gltxs_saveBuffer(GstGLTextureSink * self, GstBuffer * buf, int w, in
 {
     GstBuffer * prev;
     
+    printf("gltxs_saveBuffer\n");
     prev = self->currentFrame;
     gst_buffer_ref(buf);
     self->currentFrame = buf;
     self->fw = w;
     self->fh = h;
+    self->frames += 1;
     if (prev) {
         /* We're decoding faster than window updating? */
         /* g_debug("GLTextureSink: decode overrun detected"); */
         gst_buffer_unref(prev);
+        self->drops += 1;
+    }
+    /* Debugging info */
+    if (self->stats && (self->frames % 24) == 0) {
+        printf("gltxs #%d frames %d dropped %d\n",
+            self->instance, self->frames, self->drops);
     }
 }
 
@@ -321,6 +348,7 @@ static gboolean gltxs_initTexture(GstGLTextureSink * self)
     /* Used in PREROLL. Would also be necessary if the
        video source size changes during execution. */
 
+    printf("gltxs_initTexture...\n");
     if (self->texture == 0) {
         g_warning("GLTextureSink: No texture ID");
         return FALSE;
@@ -370,12 +398,14 @@ static gboolean gltxs_initTexture(GstGLTextureSink * self)
     self->currentFrame = NULL;
     self->callbackTag  = 0;
 
+    printf("end gltxs_initTexture\n");
     return FALSE;
 }
 
 static gboolean gltxs_updateTexture(GstGLTextureSink * self)
 {
     /* Used to RENDER frame, by uploading to OpenGL */
+    printf("gltxs_updateTexture...\n");
     if (self->texture == 0) {
         g_error("GLTextureSink: No texture ID");
         return FALSE;
@@ -402,6 +432,7 @@ static gboolean gltxs_updateTexture(GstGLTextureSink * self)
     self->currentFrame = NULL;
     self->callbackTag  = 0;
     
+    printf("end gltxs_updateTexture\n");
     return FALSE;
 }
 
@@ -445,6 +476,7 @@ static GstFlowReturn gst_gltexture_sink_preroll(GstBaseSink * base, GstBuffer * 
     GstVideoFormat      format;
     gint                w, h;
     
+    printf("gst_gltexture_sink_preroll...\n");
     if (GST_BUFFER_SIZE(buf) <= 0)
         return GST_FLOW_OK;
         
@@ -467,6 +499,7 @@ static GstFlowReturn gst_gltexture_sink_preroll(GstBaseSink * base, GstBuffer * 
     self->callbackTag = g_idle_add_full(G_PRIORITY_HIGH_IDLE,
                             (GSourceFunc)gltxs_initTexture, self, NULL);
 
+    printf("end gst_gltexture_sink_preroll\n");
     return GST_FLOW_OK;
 }
 
@@ -477,6 +510,7 @@ static GstFlowReturn gst_gltexture_sink_render(GstBaseSink * base, GstBuffer * b
     GstVideoFormat      format;
     gint                w, h;
     
+    printf("gst_gltexture_sink_render...\n");
     if (GST_BUFFER_SIZE(buf) <= 0)
         return GST_FLOW_OK;
     
@@ -490,6 +524,7 @@ static GstFlowReturn gst_gltexture_sink_render(GstBaseSink * base, GstBuffer * b
         self->callbackTag = g_idle_add_full(G_PRIORITY_HIGH_IDLE,
                             (GSourceFunc)gltxs_updateTexture, self, NULL);
 
+    printf("end gst_gltexture_sink_render\n");
     return GST_FLOW_OK;
 }
 

@@ -94,11 +94,16 @@ struct _GstGLTextureSink
     GstBuffer * currentFrame;
     int         fw, fh;
     guint       callbackTag;
+    /* Debugging stuff */
+    int         stats;          /* Set to 1 for various messages */
+    int         instance;       /* 1st, 2nd, etc */
+    int         frames, drops;
 };
 
 struct _GstGLTextureSinkClass 
 {
     GstBaseSinkClass parent_class;
+    int     instances;
 };
 
 GType gst_gltexture_sink_get_type(void);
