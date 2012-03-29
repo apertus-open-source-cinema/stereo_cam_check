@@ -1,18 +1,19 @@
-# StereoCamCheck translation
-# Copyright (C) 2011 Hugh Fisher
-# This file is distributed under the same license as StereoCamCheck.
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: StereoCamCheck 1.3\n"
-"Report-Msgid-Bugs-To: hugh.fisher@anu.edu.au\n"
-"POT-Creation-Date: 2011-11-07 14:50+1100\n"
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-03-30 09:58+1100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: chooser.py:27
@@ -43,7 +44,7 @@ msgstr ""
 msgid "Cannot set property on GLTextureSink\n"
 msgstr ""
 
-#: gstvideo.py:58 gstvideo.py:72 videotexture.py:135
+#: gstvideo.py:58 gstvideo.py:72 videotexture.py:142
 msgid "Error creating GST pipeline"
 msgstr ""
 
@@ -68,7 +69,7 @@ msgid "Exit\tctrl+w"
 msgstr ""
 
 #: main.py:83
-msgid "Version 1.3\n"
+msgid "Version 1.4\n"
 msgstr ""
 
 #: main.py:84
@@ -99,7 +100,7 @@ msgstr ""
 msgid "About StereoCamCheck"
 msgstr ""
 
-#: main.py:121
+#: main.py:113
 msgid "Stereo Camera Check"
 msgstr ""
 
@@ -119,14 +120,22 @@ msgstr ""
 msgid "Anaglyph view\tctrl+a"
 msgstr ""
 
-#: videotexture.py:132
+#: renderer.py:76
+msgid "Left eye\tctrl+l"
+msgstr ""
+
+#: renderer.py:77
+msgid "Right eye\tctrl+r"
+msgstr ""
+
+#: videotexture.py:139
 msgid "Unable to link GLTextureSink to pipeline\n"
 msgstr ""
 
-#: videotexture.py:133
+#: videotexture.py:140
 msgid "Source:"
 msgstr ""
 
-#: videotexture.py:134
+#: videotexture.py:141
 msgid "Pipeline:"
 msgstr ""

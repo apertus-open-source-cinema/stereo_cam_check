@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: StereoCamCheck 1.3\n"
 "Report-Msgid-Bugs-To: hugh.fisher@anu.edu.au\n"
 "POT-Creation-Date: 2011-11-07 14:50+1100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2012-03-29 10:00+1100\n"
 "Last-Translator: Hugh Fisher <hugh.fisher@anu.edu.au>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -42,7 +42,7 @@ msgstr "Fichier du film"
 msgid "Cannot set property on GLTextureSink\n"
 msgstr "Ne peut pas mettre cette propriété sur GLTextureSink\n"
 
-#: gstvideo.py:58 gstvideo.py:72 videotexture.py:135
+#: gstvideo.py:58 gstvideo.py:72 videotexture.py:142
 msgid "Error creating GST pipeline"
 msgstr "Erreur en créant la chaîne GST"
 
@@ -67,8 +67,8 @@ msgid "Exit\tctrl+w"
 msgstr "Fermer\tctrl+w"
 
 #: main.py:83
-msgid "Version 1.3\n"
-msgstr "Version 1.3\n"
+msgid "Version 1.4\n"
+msgstr "Version 1.4\n"
 
 #: main.py:84
 msgid "Programming: Hugh Fisher\n"
@@ -98,13 +98,13 @@ msgstr "Morgan McGuire pour le logiciel GPU Bayer demosaïque"
 msgid "About StereoCamCheck"
 msgstr "À propos de StereoCamCheck"
 
-#: main.py:121
+#: main.py:113
 msgid "Stereo Camera Check"
 msgstr ""
 
 #: renderer.py:71
 msgid "Full screen\tctrl+f"
-msgstr "Occuper tout l'écran\tctrl+f"
+msgstr "Tout l'écran\tctrl+f"
 
 #: renderer.py:73
 msgid "Blended view\tctrl+b"
@@ -118,14 +118,22 @@ msgstr "Côte à côte\tctrl+s"
 msgid "Anaglyph view\tctrl+a"
 msgstr "Vue anaglyphique\tctrl+a"
 
-#: videotexture.py:132
+#: renderer.py:76
+msgid "Left eye\tctrl+l"
+msgstr "Oeil gauche\tctrl+l"
+
+#: renderer.py:77
+msgid "Right eye\tctrl+r"
+msgstr "Oeil droit\tctrl+r"
+
+#: videotexture.py:139
 msgid "Unable to link GLTextureSink to pipeline\n"
 msgstr "N'ai pu pas joindre GLTextureSink à le pipeline\n"
 
-#: videotexture.py:133
+#: videotexture.py:140
 msgid "Source:"
 msgstr "Source:"
 
-#: videotexture.py:134
+#: videotexture.py:141
 msgid "Pipeline:"
 msgstr "La chaîne:"
