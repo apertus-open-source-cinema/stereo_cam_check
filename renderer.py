@@ -211,11 +211,13 @@ class StereoFrame(Canvas3D):
                 self.right.place(-0.5, -0.5, self, force, maxFrac)
         
     def setProjection(self):
-        """As of version 1.3 switched to integer pixel coords
-           for more accurate video display on large monitors"""
+        """Version 1.4 is back to ortho. Using pixel coordinates
+           does something odd with texture coordinate generation
+           which throws out GPU de-Bayering. No idea why."""
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        glOrtho(0, self.width, 0, self.height, -1, 1)
+        aspect = float(self.width) / float(self.height)
+        glOrtho(-aspect * 0.5, aspect * 0.5, -0.5, 0.5, -1, 1)
         glMatrixMode(GL_MODELVIEW)
     
     def setViewpoint(self):
@@ -243,7 +245,7 @@ class StereoFrame(Canvas3D):
         gpu.useProgram(self.flatShader)
         glEnableClientState(GL_COLOR_ARRAY)
         glVertexPointer(2, GL_FLOAT, 0,
-                ((self.width/2, 0) ,(self.width/2, self.height)))
+                ((0, -0.5),(0, 0.5)))
         glColorPointer(3, GL_FLOAT, 0,
                 (self.bkColor, self.bkColor))
         glDrawArrays(GL_LINES, 0, 2)

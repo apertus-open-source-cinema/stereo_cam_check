@@ -80,7 +80,7 @@ class CameraFrame(wx.Frame):
     def OnAbout(self, event):
         wx.MessageBox(
             "Stereo camera check\n" +
-            _("Version 1.3.1\n") + 
+            _("Version 1.4\n") + 
             _("Programming: Hugh Fisher\n") +
             _("CECS, ANU, 2011\n") +
             _("Stereo video experts: Winnie Yang and Nathan Clark\n") +

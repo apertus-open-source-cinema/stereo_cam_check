@@ -75,6 +75,7 @@ class VideoTexture(object):
     instCounter = 0
     
     def __init__(self, source, gstPipeline):
+        self.visible = True
         self.initTexture()
         self.initLayout()
         self.connectSource(source, gstPipeline)
@@ -89,7 +90,7 @@ class VideoTexture(object):
         """Set up position and size for display"""
         # Actual dimensions depend on video data. Assume
         # 4:3 for now so calculations don't break
-        self.dest   = Rect(0, 0, 320, 240)
+        self.dest   = Rect(0, 0, 4/3, 1)
         self.start  = self.dest.copy()
         self.box    = self.dest.copy()
         self.animStep = 0.0
@@ -143,8 +144,8 @@ class VideoTexture(object):
                          self.sink.get_property("height"))
         # First frame might not have arrived yet
         if self.vid.w > 0:
-            self.box.w = self.vid.w
-            self.box.h = self.vid.h
+            self.box.w = self.vid.w / self.vid.h
+            self.box.h = 1.0
             self.tex = Vec2f(1.0, 1.0)
             self.bayer = self.sink.get_property("is_bayer")
             self.firstFrame = True
@@ -176,8 +177,8 @@ class VideoTexture(object):
         # Position. Remember fracs in case texture size not known yet
         self.fx = fx
         self.fy = fy
-        self.dest.x = self.canvas.width/2 + (fx * self.dest.w)
-        self.dest.y = self.canvas.height/2 + (fy * self.dest.h)
+        self.dest.x = fx * self.dest.w
+        self.dest.y = fy * self.dest.h
         if force:
             self.box = self.dest.copy()
             self.animStep = 1.0
@@ -188,8 +189,8 @@ class VideoTexture(object):
     def resize(self, force=True):
         """Resize display box to match texture, either
            animating to new size or force straight away"""
-        self.dest.w = self.vid.w * self.scale
-        self.dest.h = self.vid.h * self.scale
+        self.dest.w = self.vid.w * self.scale / self.canvas.height
+        self.dest.h = self.vid.h * self.scale / self.canvas.height
         if force:
             self.start.w = self.dest.w
             self.start.h = self.dest.h
