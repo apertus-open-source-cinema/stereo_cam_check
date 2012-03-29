@@ -71,15 +71,17 @@ class Rect(object):
 
 class VideoTexture(object):
     """Display single GStreamer video source within OpenGL
-       view. Centred around point, animated move to position"""
+       view. Drawn from bottom left, animated move to position"""
     instCounter = 0
     
     def __init__(self, source, gstPipeline):
+        # Can't really do anything until first frame arrives
+        self.live = False
+        # This allows app to show/hide
         self.visible = True
         self.initTexture()
         self.initLayout()
         self.connectSource(source, gstPipeline)
-        self.stream.set_state(gst.STATE_PLAYING)
     
     def newSinkName(self):
         """Generate unique name for Gst object"""
@@ -88,6 +90,10 @@ class VideoTexture(object):
     
     def initLayout(self):
         """Set up position and size for display"""
+        # Set by app to position, scale video
+        self.fx     = 0
+        self.fy     = 0
+        self.maxArea= 1.0
         # Actual dimensions depend on video data. Assume
         # 4:3 for now so calculations don't break
         self.dest   = Rect(0, 0, 4/3, 1)
@@ -95,8 +101,6 @@ class VideoTexture(object):
         self.box    = self.dest.copy()
         self.animStep = 0.0
         self.canvas = None
-        self.fx     = 0
-        self.fy     = 0
         self.scale  = 1.0
         # Tex coords, video dimensions must wait until first use
         self.tex = Vec2f(0, 0)
@@ -109,6 +113,7 @@ class VideoTexture(object):
         # Now create the GstGLTextureSink
         self.sink = gst.element_factory_make("gltexturesink", self.newSinkName())
         self.sink.set_property("texture", self.texID)
+        # State we need to track
         self.bayer = False
         self.prog  = None
     
@@ -137,30 +142,25 @@ class VideoTexture(object):
                         _("Error creating GST pipeline"),
                         wx.OK | wx.ICON_ERROR, None)
             raise RuntimeError("Unable to link GLTextureSink to pipeline")
-    
-    def configTex(self):
-        # Try to get dimensions from GLTextureSink
-        self.vid = Vec2f(self.sink.get_property("width"),
-                         self.sink.get_property("height"))
-        # First frame might not have arrived yet
-        if self.vid.w > 0:
-            self.box.w = self.vid.w / self.vid.h
-            self.box.h = 1.0
-            self.tex = Vec2f(1.0, 1.0)
-            self.bayer = self.sink.get_property("is_bayer")
-            self.firstFrame = True
-    
-    def configShader(self):
-        if self.bayer:
-            shader = gpu.getProgram()
-            h = gpu.getUniform(shader, "sourceSize")
-            glUniform4f(h, self.vid.w, self.vid.h, 1.0/self.vid.w, 1.0/self.vid.h)
-            h = gpu.getUniform(shader, "firstRed")
-            # This is the RGGB ordering that works with Elphel
-            glUniform2f(h, 1, 0)
+        # We're good
+        self.stream.set_state(gst.STATE_PLAYING)
     
     def stop(self):
         self.stream.set_state(gst.STATE_NULL)
+    
+    def checkLive(self):
+        if self.live:
+            return True
+        # Try to get dimensions from GLTextureSink
+        self.vid = Vec2f(self.sink.get_property("width"),
+                         self.sink.get_property("height"))
+        if self.vid.w > 0 and self.vid.h > 0:
+            self.tex = Vec2f(1.0, 1.0)
+            self.bayer = self.sink.get_property("is_bayer")
+            self.resize()
+            self.setCoords()
+            self.live = True
+        return self.live
     
     def place(self, fx, fy, canvas, force=False, maxArea=1.0):
         """Place texture relative to midpoint of canvas.
@@ -168,27 +168,23 @@ class VideoTexture(object):
            negative. force True to turn off animated move.
            maxArea restricts display width to fraction of
            total canvas"""
-        if self.canvas is None:
-            self.canvas = canvas
-        # Fit within canvas.
-        self.scale = fit(self.vid.w, self.vid.h,
-            self.canvas.width * maxArea, self.canvas.height)
-        self.resize(force)
-        # Position. Remember fracs in case texture size not known yet
+        # Remember values
         self.fx = fx
         self.fy = fy
-        self.dest.x = fx * self.dest.w
-        self.dest.y = fy * self.dest.h
-        if force:
-            self.box = self.dest.copy()
-            self.animStep = 1.0
-        else:
-            self.start = self.box.copy()
-            self.animStep = 0.0
+        self.maxArea = maxArea
+        if self.canvas is None:
+            self.canvas = canvas
+        # Apply now or later?
+        if self.live:
+            self.resize(force)
+            self.setCoords(force)
     
     def resize(self, force=True):
         """Resize display box to match texture, either
            animating to new size or force straight away"""
+        self.scale = fit(self.vid.w, self.vid.h,
+            self.canvas.width * self.maxArea, self.canvas.height)
+        # Use of canvas height for dest.w is not a mistake
         self.dest.w = self.vid.w * self.scale / self.canvas.height
         self.dest.h = self.vid.h * self.scale / self.canvas.height
         if force:
@@ -197,6 +193,17 @@ class VideoTexture(object):
             self.box.w   = self.dest.w
             self.box.h   = self.dest.h
     
+    def setCoords(self, force=True):
+        """Set location (not size) on live texture"""
+        self.dest.x = self.fx * self.dest.w
+        self.dest.y = self.fy * self.dest.h
+        if force:
+            self.box = self.dest.copy()
+            self.animStep = 1.0
+        else:
+            self.start = self.box.copy()
+            self.animStep = 0.0
+    
     def slide(self):
         """Animated slide into new position within canvas"""
         if self.animStep >= 1.0:
@@ -204,21 +211,27 @@ class VideoTexture(object):
         self.animStep = min(self.animStep + 0.2, 1.0)
         self.box = Rect.step(self.start, self.dest, self.animStep)
     
+    def configShader(self):
+        """Set uniforms in current GPU program"""
+        if self.bayer:
+            shader = gpu.getProgram()
+            h = gpu.getUniform(shader, "sourceSize")
+            glUniform4f(h, self.vid.w, self.vid.h, 1.0/self.vid.w, 1.0/self.vid.h)
+            h = gpu.getUniform(shader, "firstRed")
+            # This is the RGGB ordering that works with Elphel
+            glUniform2f(h, 1, 0)
+    
     def draw(self):
-        # First actual frame has arrived? (It's possible
-        # we'll be drawn a few times beforehand)
-        if self.tex.w <= 0 or self.tex.h <= 0:
-            self.configTex()
+        # First actual frame has arrived?
+        if not self.checkLive():
             return
-        if self.firstFrame:
-            # Actual dimensions may cause change in layout
-            self.resize(force=True)
-            self.place(self.fx, self.fy, self.canvas, True)
-            self.firstFrame = False
+        # App allows display?
+        if not self.visible:
+            return
+        # App has changed shaders?
         if gpu.getProgram() != self.prog:
             self.configShader()
             self.prog = gpu.getProgram()
-        #
         # Animated slide to new position?
         self.slide()
         # Just rect with texture coords
