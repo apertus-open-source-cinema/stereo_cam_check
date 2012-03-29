@@ -281,11 +281,11 @@ class StereoFrame(Canvas3D):
         else:
             gpu.useProgram(self.rgbVideo)
         glEnable(GL_BLEND)
-        glBlendColor(1.0, 1.0, 1.0, 1.0)
-        glBlendFunc(GL_ONE, GL_ZERO)
+        glBlendColor(1.0, 1.0, 1.0, 0.5)
+        glBlendFunc(GL_CONSTANT_ALPHA, GL_ZERO)
         self.left.draw()
         glBlendColor(1.0, 1.0, 1.0, 0.5)
-        glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
+        glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE)
         self.right.draw()
     
     def drawRedBlueStreams(self):
