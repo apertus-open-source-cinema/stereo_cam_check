@@ -148,6 +148,9 @@ class VideoTexture(object):
     def stop(self):
         self.stream.set_state(gst.STATE_NULL)
     
+    def setVisible(self, state):
+        self.visible = state
+    
     def checkLive(self):
         if self.live:
             return True

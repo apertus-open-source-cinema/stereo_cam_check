@@ -36,7 +36,8 @@ MYID_SPLIT      = wx.ID_HIGHEST + 1
 MYID_BLENDED    = MYID_SPLIT + 1
 MYID_ANAGLYPH   = MYID_BLENDED + 1
 MYID_FULLSCREEN = MYID_ANAGLYPH + 1
-
+MYID_SHOW_LEFT  = MYID_FULLSCREEN + 1
+MYID_SHOW_RIGHT = MYID_SHOW_LEFT + 1
     
 class StereoFrame(Canvas3D):
     """Display frame stereo image pair"""
@@ -72,10 +73,14 @@ class StereoFrame(Canvas3D):
         menu.AppendCheckItem(MYID_BLENDED, _("Blended view\tctrl+b"))
         menu.AppendCheckItem(MYID_SPLIT, _("Side by side\tctrl+s"))
         menu.AppendCheckItem(MYID_ANAGLYPH, _("Anaglyph view\tctrl+a"))
+        menu.AppendCheckItem(MYID_SHOW_LEFT, _("Left eye\tctrl+l"))
+        menu.AppendCheckItem(MYID_SHOW_RIGHT, _("Right eye\tctrl+r"))
         self.window.Bind(wx.EVT_MENU, self.OnFullScreen, id=MYID_FULLSCREEN)
         self.window.Bind(wx.EVT_MENU, self.OnSplit, id=MYID_SPLIT)
         self.window.Bind(wx.EVT_MENU, self.OnMerge, id=MYID_BLENDED)
         self.window.Bind(wx.EVT_MENU, self.OnAnaglyph, id=MYID_ANAGLYPH)
+        self.window.Bind(wx.EVT_MENU, self.OnShowLeft, id=MYID_SHOW_LEFT)
+        self.window.Bind(wx.EVT_MENU, self.OnShowRight, id=MYID_SHOW_RIGHT)
         # Immediate update, wx always checks first item
         self.OnUpdateMenu(None)
     
@@ -117,19 +122,37 @@ class StereoFrame(Canvas3D):
         self.positionStreams()
         self.OnUpdateMenu(None)
     
+    def OnShowLeft(self, event):
+        """Toggle left eye visibility"""
+        if self.left:
+            self.left.setVisible(not self.left.visible)
+            self.OnUpdateMenu(None)
+    
+    def OnShowRight(self, event):
+        """Toggle right eye"""
+        if self.right:
+            self.right.setVisible(not self.right.visible)
+            self.OnUpdateMenu(None)
+    
     def OnUpdateMenu(self, event):
         """Auto update of menu status"""
         if self.mono:
             self.menu.Enable(MYID_SPLIT, False)
             self.menu.Enable(MYID_BLENDED, False)
             self.menu.Enable(MYID_ANAGLYPH, False)
+            self.menu.Enable(MYID_SHOW_LEFT, False)
+            self.menu.Enable(MYID_SHOW_RIGHT, False)
         else:
             self.menu.Enable(MYID_SPLIT, True)
             self.menu.Enable(MYID_BLENDED, True)
             self.menu.Enable(MYID_ANAGLYPH, True)
+            self.menu.Enable(MYID_SHOW_LEFT, True)
+            self.menu.Enable(MYID_SHOW_RIGHT, True)
             self.menu.Check(MYID_SPLIT, not self.overlay)
             self.menu.Check(MYID_BLENDED, self.overlay == MYID_BLENDED)
             self.menu.Check(MYID_ANAGLYPH, self.overlay == MYID_ANAGLYPH)
+            self.menu.Check(MYID_SHOW_LEFT, self.left and self.left.visible)
+            self.menu.Check(MYID_SHOW_RIGHT, self.right and self.right.visible)
     
     def key(self, event):
         """Quit on ESC, others ignored"""
