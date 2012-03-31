@@ -29,7 +29,8 @@ def lerp(x, y, a):
 def fit(w, h, maxW, maxH):
     """Return scale factor to fit rectangle within limit"""
     for s in (1, 2/3, 1/2, 1/3, 1/4):
-        if w * s <= maxW and h * s <= maxH:
+        # According to users, OK to chop a bit off top and bottom
+        if w * s <= maxW and h * s <= maxH * 1.05:
             return s
     # If we get here, who knows?
     return 0.1
