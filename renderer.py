@@ -280,11 +280,15 @@ class StereoFrame(Canvas3D):
             gpu.useProgram(self.bayerVideo)
         else:
             gpu.useProgram(self.rgbVideo)
+        if self.left.visible and self.right.visible:
+            opacity = 0.5
+        else:
+            opacity = 1.0
         glEnable(GL_BLEND)
-        glBlendColor(1.0, 1.0, 1.0, 0.5)
+        glBlendColor(1.0, 1.0, 1.0, opacity)
         glBlendFunc(GL_CONSTANT_ALPHA, GL_ZERO)
         self.left.draw()
-        glBlendColor(1.0, 1.0, 1.0, 0.5)
+        glBlendColor(1.0, 1.0, 1.0, opacity)
         glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE)
         self.right.draw()
     
